@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Handy Compass</title>
+<meta name="theme-color" content="#050507">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--fg:#fff;--mut:#8d8d98;--line:rgba(255,255,255,.14);--red:#ff453a;--panel:#141416;--sheet-w:400px;
+font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:#050507;color:var(--fg);overflow:hidden;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+body{background:radial-gradient(120% 80% at 50% 45%,#14141b 0%,#07070a 55%,#000 100%)}
+main{height:100%;display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);transition:margin .3s}
+header{text-align:center;padding-top:clamp(14px,3vh,34px);min-height:96px}
+#hd{font-size:clamp(40px,7vh,60px);font-weight:400;letter-spacing:.01em;line-height:1}
+#loc{font-size:clamp(15px,2.2vh,19px);margin-top:6px}
+#stage{--d:min(94vw,58vh,700px);--h:0;position:relative;width:var(--d);height:var(--d);margin:auto 0;touch-action:none;cursor:grab}
+.dial{position:absolute;inset:0;transform:rotate(calc(var(--h)*-1deg));will-change:transform}
+.dial svg,.fixed{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.fixed{pointer-events:none}
+.b{position:absolute;width:11%;aspect-ratio:1;margin:-5.5% 0 0 -5.5%;border-radius:50%;display:grid;place-items:center;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+.b i,.ic{display:grid;place-items:center;width:56%;height:56%}
+.b i{transform:rotate(calc(var(--h)*1deg))}
+svg.s{width:100%;height:100%;fill:currentColor;stroke:currentColor;stroke-width:0}
+#bar{display:flex;gap:46px;padding:12px 0 clamp(18px,4vh,40px)}
+.fab{width:72px;height:58px;border-radius:30px;border:1px solid var(--line);background:linear-gradient(#3a3d4a,#1c1d25);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.6)}
+.fab.add{width:84px;height:84px;border-radius:50%;margin-top:-14px;background:radial-gradient(circle at 50% 35%,#ff7b72,#c43b34 70%);border-color:rgba(255,160,150,.5)}
+.fab svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round}
+.fab:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #64d2ff;outline-offset:2px}
+#en{position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:12px;background:#222;border:1px solid var(--line);color:#fff;border-radius:20px;padding:8px 14px;font-size:13px;display:none;cursor:pointer}
+#sheet{position:fixed;left:0;right:0;bottom:0;height:62vh;max-height:calc(100% - 70px);background:linear-gradient(#17171b,#0d0d10);border-radius:28px 28px 0 0;border:1px solid var(--line);border-bottom:0;transform:translateY(105%);transition:transform .35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;z-index:5;padding-bottom:env(safe-area-inset-bottom)}
+#sheet.open{transform:none}
+#sheet.tall{height:94vh}
+.grip{width:70px;height:6px;border-radius:3px;background:#3b3b42;margin:10px auto 6px;border:0;padding:0;cursor:pointer;flex:none}
+.view{display:none;overflow:auto;padding:12px 22px 24px;flex:1}
+.view.on{display:block}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:34px 18px;padding-top:26px}
+.pl{position:relative;aspect-ratio:1;max-width:210px;width:100%;margin:0 auto}
+.pl .ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(circle,rgba(255,255,255,.05),transparent 70%);cursor:pointer;color:inherit;font:inherit;padding:0}
+.pl b{font-size:22px;font-weight:500;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl small{color:#7b7b85;font-size:15px;line-height:1.35}
+.pl .b{width:23%;margin:0;left:auto;right:2%;bottom:2%}
+.pl .x{position:absolute;top:-6px;right:-18px;width:34px;height:34px;border:0;background:none;color:#fff;font-size:30px;line-height:1;cursor:pointer}
+.empty{text-align:center;color:var(--mut);padding:60px 10px}
+input#t{width:100%;height:56px;border-radius:14px;border:1px solid var(--line);background:#1b1b1f;color:#fff;font-size:20px;padding:0 16px;margin-top:6px}
+#map{position:relative;height:clamp(180px,30vh,260px);border-radius:26px;overflow:hidden;margin-top:18px;background:#1c1c24;touch-action:none;cursor:grab}
+#tiles{position:absolute;inset:0}
+#tiles img{position:absolute;width:256px;height:256px;filter:invert(1) hue-rotate(200deg) saturate(.7) brightness(.8)}
+#pin{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-34px 0 0 -17px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--red);box-shadow:0 3px 8px #0009}
+#pin:after{content:"";position:absolute;inset:11px;border-radius:50%;background:#fff}
+#co{color:#9a9aa5;font-size:18px;margin:12px 2px 24px}
+.lab{color:#9a9aa5;font-size:17px;margin:0 0 12px}
+.row{display:flex;gap:28px;flex-wrap:wrap}
+.opts{display:grid;grid-template-columns:repeat(3,64px);gap:14px 18px}
+.opts button{width:64px;height:64px;border-radius:50%;border:1px solid transparent;background:#232327;color:#fff;display:grid;place-items:center;padding:14px;cursor:pointer}
+.opts.sy button.sel{border:3px solid #fff;background:#17171a}
+.opts.co button{padding:0;border:3px solid transparent;background-clip:padding-box}
+.opts.co button.sel{border-color:#fff;box-shadow:inset 0 0 0 3px #17171a}
+#save{width:100%;height:62px;margin-top:28px;border-radius:16px;border:1px solid var(--line);background:#1a1a1e;color:#fff;font-size:22px;cursor:pointer}
+#save:disabled{opacity:.4}
+@media (max-width:420px){.opts{grid-template-columns:repeat(3,56px);gap:12px}.opts button{width:56px;height:56px;padding:12px}.row{gap:14px}}
+@media (min-width:900px){
+ #sheet{left:auto;top:0;height:100%!important;max-height:none;width:var(--sheet-w);border-radius:0;border:0;border-left:1px solid var(--line);transform:translateX(105%)}
+ #sheet.open{transform:none}
+ body.open main{margin-right:var(--sheet-w)}
+ #stage{--d:min(80vh,calc(100vw - 80px),760px)}
+ #grid{grid-template-columns:repeat(2,1fr)}
+ .grip{display:none}
+ #sheet:before{content:"";height:24px;flex:none}
+}
+@media (max-height:620px) and (max-width:899px){#stage{--d:min(80vw,52vh)}header{min-height:70px}#hd{font-size:34px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 3a4 4 0 0 0-1 7.9V21h2V10.9A4 4 0 0 0 12 3z"/></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M5 11l1.6-4.2A2 2 0 0 1 8.5 5.5h7a2 2 0 0 1 1.9 1.3L19 11a2 2 0 0 1 2 2v4h-2v1.5h-2.5V17h-9v1.5H5V17H3v-4a2 2 0 0 1 2-2zm2.2 0h9.6l-1.2-3.5H8.4zM6.5 14.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zm11 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill-rule="evenodd"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3z"/></symbol>
+<symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></symbol>
+<symbol id="i-bike" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16L9 8h6l3.5 8M9 8H7M12 16l3-8"/></g></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M10.5 18h3"/></g></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zm8 2.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6z" fill-rule="evenodd"/></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l1 12H4z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-1 9.9V15l2 1.5-2 1.5 2 1.5-2 1.5V22h3v-9.1A5 5 0 0 0 12 2zm0 3a1.6 1.6 0 1 1 0 3.2A1.6 1.6 0 0 1 12 5z" fill-rule="evenodd"/></symbol>
+</defs></svg>
+
+<main>
+ <header><div id="hd">0° N</div><div id="loc">Locating…</div></header>
+ <button id="en"></button>
+ <div id="stage" aria-label="Compass">
+  <div class="dial" id="dial"><svg viewBox="-300 -300 600 600" id="dsvg"></svg><div id="badges"></div></div>
+  <svg class="fixed" viewBox="-300 -300 600 600">
+   <defs><radialGradient id="g"><stop offset="0" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></radialGradient></defs>
+   <circle r="170" fill="url(#g)" stroke="rgba(255,255,255,.18)"/><circle r="115" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.12)"/><circle r="60" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.1)"/>
+   <path d="M0 0L-200 -215A290 290 0 0 1 200 -215z" fill="rgba(255,255,255,.07)"/>
+   <path d="M-230 0H230M0 -230V230" stroke="rgba(255,255,255,.8)" stroke-width="1.2"/>
+   <path d="M0 0V-230" stroke="#ff453a" stroke-width="1.5"/>
+   <circle r="26" fill="#ff453a"/>
+   <svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24" style="color:#fff;fill:#fff"><use href="#i-car"/></svg>
+  </svg>
+ </div>
+ <div id="bar">
+  <button class="fab" id="bl" aria-label="Saved places"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+  <button class="fab add" id="ba" aria-label="Add place"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+ </div>
+</main>
+
+<section id="sheet" aria-live="polite">
+ <button class="grip" id="grip" aria-label="Close"></button>
+ <div class="view" id="vl"><div id="grid"></div></div>
+ <div class="view" id="va">
+  <input id="t" placeholder="Enter the title" maxlength="30" autocomplete="off">
+  <div id="map"><div id="tiles"></div><div id="pin"></div></div>
+  <div id="co"></div>
+  <div class="row"><div><p class="lab">Symbol</p><div class="opts sy" id="sy"></div></div>
+  <div><p class="lab">Colors</p><div class="opts co" id="cl"></div></div></div>
+  <button id="save">Add</button>
+ </div>
+</section>
+
+<script>
+const $=id=>document.getElementById(id),R=Math.PI/180;
+const SYM=['pin','car','home','person','bike','phone','camera','bag','key'];
+const COL=['#ff453a','#ff9f0a','#ffd60a','#30d158','#0a84ff','#64d2ff','#bf5af2','#ac8e68','#8e8e93'];
+const ico=n=>`<svg class="s"><use href="#i-${n}"/></svg>`;
+const SF={lat:37.7872,lon:-122.4084};
+const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let places=ls.get('places',null);
+if(!places){places=[
+ {id:1,t:'Food store',lat:37.7866,lon:-122.4071,s:'bag',c:COL[1]},
+ {id:2,t:'School',lat:37.7863,lon:-122.4085,s:'home',c:COL[4]},
+ {id:3,t:'Home',lat:37.7874,lon:-122.4082,s:'home',c:COL[3]},
+ {id:4,t:'My car',lat:37.7874,lon:-122.4082,s:'car',c:COL[0]}];ls.set('places',places)}
+let pos=ls.get('pos',SF);
+
+/* ---------- dial ---------- */
+(function(){let h='<circle r="290" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.16)"/><circle r="214" fill="none" stroke="rgba(255,255,255,.08)"/>';
+for(let a=0;a<360;a+=2){const M=a%10==0,L=a%30==0,r1=244,r2=L?218:M?226:234;
+h+=`<line x1="0" y1="${-r1}" x2="0" y2="${-r2}" transform="rotate(${a})" stroke="#fff" stroke-opacity="${M?.8:.45}" stroke-width="${L?2:1.2}"/>`;
+if(L)h+=`<text transform="rotate(${a}) translate(0,-258)" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="21">${a}</text>`}
+[['N',0,'#ff453a'],['E',90,'#fff'],['S',180,'#fff'],['W',270,'#fff']].forEach(([l,a,c])=>h+=`<text transform="rotate(${a}) translate(0,-196)" text-anchor="middle" dominant-baseline="middle" fill="${c}" font-size="36" font-weight="300">${l}</text>`);
+$('dsvg').innerHTML=h})();
+
+/* ---------- geo ---------- */
+function bd(a,b){const p1=a.lat*R,p2=b.lat*R,dl=(b.lon-a.lon)*R;
+ const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+ const q=Math.sin((p2-p1)/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+ return{b:(Math.atan2(y,x)/R+360)%360,d:12742000*Math.asin(Math.min(1,Math.sqrt(q)))}}
+function drawBadges(){$('badges').innerHTML=places.map(p=>{const {b,d}=bd(pos,p);
+ const f=Math.min(1,.3+.7*Math.log10(1+d)/3.6),r=50*.97*f;
+ return`<div class="b" title="${esc(p.t)}" style="left:${50+r*Math.sin(b*R)}%;top:${50-r*Math.cos(b*R)}%;background:${p.c}"><i>${ico(p.s)}</i></div>`}).join('')}
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=(v,p,n)=>Math.abs(v).toFixed(4)+' '+(v<0?n:p); // keeps the reference UI's "E / W" style
+let lastGeo=0;
+function setPos(la,lo){pos={lat:la,lon:lo};ls.set('pos',pos);drawBadges();$('loc').textContent=fmt(la,'N','S')+', '+fmt(lo,'E','W');
+ if(Date.now()-lastGeo>60000){lastGeo=Date.now();
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&lat=${la}&lon=${lo}`).then(r=>r.json()).then(j=>{const a=j.address||{};const n=a.city||a.town||a.village||a.county;if(n)$('loc').textContent=n}).catch(()=>{})}}
+if('geolocation' in navigator)navigator.geolocation.watchPosition(p=>setPos(p.coords.latitude,p.coords.longitude),()=>{$('loc').textContent='San Francisco';drawBadges()},{enableHighAccuracy:true,maximumAge:5000});
+else $('loc').textContent='San Francisco';
+drawBadges();if(!ls.get('pos',0))$('loc').textContent='San Francisco';
+
+/* ---------- heading ---------- */
+let cur=0,hasSensor=false;
+const WIND=['N','NE','E','SE','S','SW','W','NW'];
+function show(){const d=((Math.round(cur)%360)+360)%360;$('stage').style.setProperty('--h',cur);$('hd').textContent=d+'° '+WIND[Math.round(d/45)%8]}
+function setH(h,smooth){const d=((h-cur)%360+540)%360-180;cur+=smooth?d*.3:d;show()}
+function onOri(e){let h;if(e.webkitCompassHeading!=null)h=e.webkitCompassHeading;
+ else if(e.alpha!=null&&(e.absolute||e.type==='deviceorientationabsolute'))h=360-e.alpha;else return;
+ h+=(screen.orientation&&screen.orientation.angle)||0;hasSensor=true;$('en').style.display='none';setH(h,true)}
+function startSensor(){const ev='ondeviceorientationabsolute' in window?'deviceorientationabsolute':'deviceorientation';addEventListener(ev,onOri,true)}
+const en=$('en');
+if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function'){
+ en.textContent='Enable compass';en.style.display='block';
+ en.onclick=async()=>{try{if(await DeviceOrientationEvent.requestPermission()==='granted'){startSensor();en.style.display='none'}}catch{}}
+}else{startSensor();setTimeout(()=>{if(!hasSensor){en.textContent='No sensor · drag the dial';en.style.display='block';en.onclick=()=>en.style.display='none'}},1800)}
+
+/* manual rotate (desktop / no sensor) */
+(function(){const st=$('stage');let on=0,a0=0,h0=0;
+ const ang=e=>{const r=st.getBoundingClientRect();return Math.atan2(e.clientY-r.top-r.height/2,e.clientX-r.left-r.width/2)/R};
+ st.addEventListener('pointerdown',e=>{if(hasSensor)return;on=1;a0=ang(e);h0=cur;st.setPointerCapture(e.pointerId);st.style.cursor='grabbing'});
+ st.addEventListener('pointermove',e=>{if(on){cur=h0-(ang(e)-a0);show()}});
+ const up=()=>{on=0;st.style.cursor=''};st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
+ addEventListener('keydown',e=>{if(hasSensor||/INPUT/.test(document.activeElement.tagName))return;
+  if(e.key==='ArrowLeft'){cur-=5;show()}if(e.key==='ArrowRight'){cur+=5;show()}if(e.key==='Escape')closeSheet()})})();
+show();
+
+/* ---------- sheet ---------- */
+const sh=$('sheet');let mode='';
+function openSheet(m){mode=m;sh.classList.add('open');sh.classList.toggle('tall',m==='a');document.body.classList.add('open');
+ $('vl').classList.toggle('on',m==='l');$('va').classList.toggle('on',m==='a');if(m==='l')renderList();else initAdd()}
+function closeSheet(){mode='';sh.classList.remove('open');document.body.classList.remove('open')}
+$('grip').onclick=closeSheet;
+$('bl').onclick=()=>mode==='l'?closeSheet():openSheet('l');
+$('ba').onclick=()=>openSheet('a');
+function renderList(){const g=$('grid');
+ if(!places.length){g.innerHTML='<div class="empty">No saved places yet.<br>Tap + to add one.</div>';return}
+ g.innerHTML=places.map(p=>`<div class="pl"><button class="ring" data-g="${p.id}"><b>${esc(p.t)}</b><small>${p.lat.toFixed(4)} E<br>${p.lon.toFixed(4)} W</small></button>
+ <div class="b" style="background:${p.c}"><i>${ico(p.s)}</i></div><button class="x" data-x="${p.id}" aria-label="Delete ${esc(p.t)}">×</button></div>`).join('')}
+$('grid').onclick=e=>{const x=e.target.closest('[data-x]');
+ if(x){places=places.filter(p=>p.id!=x.dataset.x);ls.set('places',places);renderList();drawBadges()}}
+
+/* ---------- add place ---------- */
+let sSym='pin',sCol=COL[0],mc={lat:pos.lat,lon:pos.lon};const Z=17;
+$('sy').innerHTML=SYM.map(s=>`<button data-s="${s}" aria-label="${s}">${ico(s)}</button>`).join('');
+$('cl').innerHTML=COL.map(c=>`<button data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('');
+function sel(){document.querySelectorAll('#sy button').forEach(b=>b.classList.toggle('sel',b.dataset.s===sSym));
+ document.querySelectorAll('#cl button').forEach(b=>b.classList.toggle('sel',b.dataset.c===sCol))}
+$('sy').onclick=e=>{const b=e.target.closest('button');if(b){sSym=b.dataset.s;sel()}};
+$('cl').onclick=e=>{const b=e.target.closest('button');if(b){sCol=b.dataset.c;sel()}};
+const W2=(la,lo)=>{const s=256*2**Z;return{x:(lo+180)/360*s,y:(1-Math.log(Math.tan(la*R)+1/Math.cos(la*R))/Math.PI)/2*s}};
+const P2=(x,y)=>{const s=256*2**Z,n=Math.PI-2*Math.PI*y/s;return{lat:Math.atan(Math.sinh(n))/R,lon:x/s*360-180}};
+let cp=W2(mc.lat,mc.lon);
+function drawMap(){const m=$('map'),w=m.clientWidth,h=m.clientHeight,x0=cp.x-w/2,y0=cp.y-h/2;let s='';
+ for(let tx=Math.floor(x0/256);tx<=Math.floor((x0+w)/256);tx++)for(let ty=Math.floor(y0/256);ty<=Math.floor((y0+h)/256);ty++)
+  s+=`<img alt="" draggable="false" src="https://tile.openstreetmap.org/${Z}/${tx}/${ty}.png" style="left:${tx*256-x0}px;top:${ty*256-y0}px">`;
+ $('tiles').innerHTML=s;mc=P2(cp.x,cp.y);$('co').textContent=mc.lat.toFixed(4)+' E  '+mc.lon.toFixed(4)+' W'}
+function initAdd(){$('t').value='';sSym='pin';sCol=COL[0];sel();mc={lat:pos.lat,lon:pos.lon};cp=W2(mc.lat,mc.lon);$('save').disabled=false;requestAnimationFrame(drawMap)}
+(function(){const m=$('map');let d=0,lx=0,ly=0;
+ m.addEventListener('pointerdown',e=>{d=1;lx=e.clientX;ly=e.clientY;m.setPointerCapture(e.pointerId)});
+ m.addEventListener('pointermove',e=>{if(!d)return;cp.x-=e.clientX-lx;cp.y-=e.clientY-ly;lx=e.clientX;ly=e.clientY;drawMap()});
+ const up=()=>d=0;m.addEventListener('pointerup',up);m.addEventListener('pointercancel',up)})();
+addEventListener('resize',()=>{if(mode==='a')drawMap()});
+$('save').onclick=()=>{const t=$('t').value.trim()||'Place '+(places.length+1);
+ places.push({id:Date.now(),t,lat:mc.lat,lon:mc.lon,s:sSym,c:sCol});ls.set('places',places);drawBadges();openSheet('l')};
+
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
